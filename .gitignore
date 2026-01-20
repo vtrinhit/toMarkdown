@@ -1,0 +1,160 @@
+# ========================================
+# Dependencies
+# ========================================
+node_modules/
+.pnp/
+.pnp.js
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env.local
+.env.*.local
+
+# ========================================
+# Environment & Secrets
+# ========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+secrets/
+credentials.json
+
+# ========================================
+# Build outputs
+# ========================================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+*.tsbuildinfo
+
+# ========================================
+# IDE & Editors
+# ========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ========================================
+# OS generated files
+# ========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ========================================
+# Logs & Debug
+# ========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ========================================
+# Testing & Coverage
+# ========================================
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+junit.xml
+
+# ========================================
+# Cache
+# ========================================
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.stylelintcache
+*.cache
+.turbo/
+.vercel/
+.netlify/
+
+# ========================================
+# Temporary files
+# ========================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ========================================
+# Upload & Output directories
+# ========================================
+uploads/
+outputs/
+/tmp/tomd_uploads/
+/tmp/tomd_outputs/
+
+# ========================================
+# Docker
+# ========================================
+.docker/
+
+# ========================================
+# Misc
+# ========================================
+*.local
+.claude/
