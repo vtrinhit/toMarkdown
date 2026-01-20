@@ -4,7 +4,17 @@ import asyncio
 from pathlib import Path
 from typing import List
 
+# Check if docling is available
+try:
+    from docling.document_converter import DocumentConverter
+    DOCLING_AVAILABLE = True
+except ImportError:
+    DOCLING_AVAILABLE = False
+
 from .base import BaseConverter
+
+if not DOCLING_AVAILABLE:
+    raise ImportError("docling is not installed")
 
 
 class DoclingConverter(BaseConverter):
@@ -27,8 +37,6 @@ class DoclingConverter(BaseConverter):
         """Convert file using docling."""
 
         def _convert():
-            from docling.document_converter import DocumentConverter
-
             converter = DocumentConverter()
             result = converter.convert(str(file_path))
             markdown_content = result.document.export_to_markdown()

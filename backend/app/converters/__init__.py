@@ -5,24 +5,36 @@ from pathlib import Path
 
 from .base import BaseConverter
 from .markitdown_converter import MarkitdownConverter
-from .docling_converter import DoclingConverter
-from .marker_converter import MarkerConverter
 from .pypandoc_converter import PypandocConverter
-from .unstructured_converter import UnstructuredConverter
 from .mammoth_converter import MammothConverter
 from .html2text_converter import Html2textConverter
 
-
-# Registry of all converters
+# Registry of all converters - start with core converters
 CONVERTERS: Dict[str, Type[BaseConverter]] = {
     "markitdown": MarkitdownConverter,
-    "docling": DoclingConverter,
-    "marker": MarkerConverter,
     "pypandoc": PypandocConverter,
-    "unstructured": UnstructuredConverter,
     "mammoth": MammothConverter,
     "html2text": Html2textConverter,
 }
+
+# Try to import optional converters
+try:
+    from .docling_converter import DoclingConverter
+    CONVERTERS["docling"] = DoclingConverter
+except ImportError:
+    pass
+
+try:
+    from .marker_converter import MarkerConverter
+    CONVERTERS["marker"] = MarkerConverter
+except ImportError:
+    pass
+
+try:
+    from .unstructured_converter import UnstructuredConverter
+    CONVERTERS["unstructured"] = UnstructuredConverter
+except ImportError:
+    pass
 
 
 def get_converter(
@@ -86,6 +98,8 @@ def get_best_converter_for_file(
     converter_priority = priority.get(ext, ["markitdown", "unstructured", "pypandoc"])
 
     for converter_name in converter_priority:
+        if converter_name not in CONVERTERS:
+            continue
         try:
             converter = get_converter(converter_name, api_key, base_url)
             if converter.supports_file(file_path):
@@ -111,10 +125,7 @@ def get_all_converter_info() -> list:
 __all__ = [
     "BaseConverter",
     "MarkitdownConverter",
-    "DoclingConverter",
-    "MarkerConverter",
     "PypandocConverter",
-    "UnstructuredConverter",
     "MammothConverter",
     "Html2textConverter",
     "CONVERTERS",
