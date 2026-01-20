@@ -12,11 +12,13 @@ import { PreviewModal } from "@/components/PreviewModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { useAppStore } from "@/stores/app";
 import { converterApi } from "@/lib/api";
+import type { ConverterType, FileInfo } from "@/types";
 
 function App() {
   const {
     uploadedFiles,
     selectedConverter,
+    fileConverterMapping,
     setSettingsOpen,
     clearUploadedFiles,
     addJobs,
@@ -24,14 +26,59 @@ function App() {
   const [isConverting, setIsConverting] = useState(false);
   const queryClient = useQueryClient();
 
+  // Get converter for a file based on its extension
+  const getConverterForFile = (file: FileInfo): ConverterType => {
+    if (selectedConverter !== "custom") {
+      return selectedConverter as ConverterType;
+    }
+
+    // Get extension from file
+    const ext = file.extension?.toLowerCase() || "";
+    const configuredConverter = fileConverterMapping[ext];
+
+    // If configured and not auto, use the configured converter
+    if (configuredConverter && configuredConverter !== "auto") {
+      return configuredConverter as ConverterType;
+    }
+
+    // Default to auto
+    return "auto";
+  };
+
   const handleConvert = async () => {
     if (uploadedFiles.length === 0) return;
 
     setIsConverting(true);
     try {
-      const fileIds = uploadedFiles.map((f) => f.id);
-      const result = await converterApi.startConversion(fileIds, selectedConverter);
-      addJobs(result.jobs);
+      if (selectedConverter === "custom") {
+        // Group files by their configured converter
+        const filesByConverter: Record<ConverterType, string[]> = {} as Record<ConverterType, string[]>;
+
+        uploadedFiles.forEach((file) => {
+          const converter = getConverterForFile(file);
+          if (!filesByConverter[converter]) {
+            filesByConverter[converter] = [];
+          }
+          filesByConverter[converter].push(file.id);
+        });
+
+        // Start conversion for each group
+        const allJobs = [];
+        for (const [converter, fileIds] of Object.entries(filesByConverter)) {
+          if (fileIds.length > 0) {
+            const result = await converterApi.startConversion(fileIds, converter as ConverterType);
+            allJobs.push(...result.jobs);
+          }
+        }
+
+        addJobs(allJobs);
+      } else {
+        // Normal conversion with single converter
+        const fileIds = uploadedFiles.map((f) => f.id);
+        const result = await converterApi.startConversion(fileIds, selectedConverter as ConverterType);
+        addJobs(result.jobs);
+      }
+
       clearUploadedFiles();
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     } catch (error) {

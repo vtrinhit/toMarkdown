@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Info, Check, Circle, AlertCircle } from "lucide-react";
+import { Info, Check, Circle, AlertCircle, Settings2, ChevronDown, ChevronUp } from "lucide-react";
 import { useAppStore } from "@/stores/app";
 import { converterApi } from "@/lib/api";
 import type { ConverterInfo } from "@/types";
@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { CustomConverterSettings } from "@/components/CustomConverterSettings";
+import { motion, AnimatePresence } from "framer-motion";
 
 const converterColors: Record<string, string> = {
   markitdown: "bg-blue-500",
@@ -21,6 +23,7 @@ const converterColors: Record<string, string> = {
   mammoth: "bg-yellow-500",
   html2text: "bg-cyan-500",
   auto: "bg-gradient-to-r from-indigo-500 to-purple-500",
+  custom: "bg-gradient-to-r from-amber-500 to-orange-500",
 };
 
 const converterBorderColors: Record<string, string> = {
@@ -32,6 +35,7 @@ const converterBorderColors: Record<string, string> = {
   mammoth: "border-yellow-500",
   html2text: "border-cyan-500",
   auto: "border-indigo-500",
+  custom: "border-amber-500",
 };
 
 // File format info for each converter
@@ -64,14 +68,27 @@ const converterFileInfo: Record<string, string[]> = {
 };
 
 interface ConverterItemProps {
-  converter: ConverterInfo | { id: "auto"; name: string; description: string };
+  converter: ConverterInfo | { id: "auto" | "custom"; name: string; description: string };
   isSelected: boolean;
   onSelect: () => void;
+  showExpandButton?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  customCount?: number;
 }
 
-function ConverterItem({ converter, isSelected, onSelect }: ConverterItemProps) {
+function ConverterItem({
+  converter,
+  isSelected,
+  onSelect,
+  showExpandButton,
+  isExpanded,
+  onToggleExpand,
+  customCount,
+}: ConverterItemProps) {
   const [infoOpen, setInfoOpen] = useState(false);
   const isAuto = converter.id === "auto";
+  const isCustom = converter.id === "custom";
   const fileFormats = converterFileInfo[converter.id] || [];
 
   return (
@@ -96,11 +113,16 @@ function ConverterItem({ converter, isSelected, onSelect }: ConverterItemProps) 
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium">{converter.name}</span>
-          {!isAuto && (
+          {!isAuto && !isCustom && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-600 dark:text-green-400 font-medium">
               Active
+            </span>
+          )}
+          {isCustom && customCount !== undefined && customCount > 0 && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium">
+              {customCount} rules
             </span>
           )}
         </div>
@@ -109,58 +131,98 @@ function ConverterItem({ converter, isSelected, onSelect }: ConverterItemProps) 
         </p>
       </div>
 
-      {/* Info button */}
-      <Popover open={infoOpen} onOpenChange={setInfoOpen}>
-        <PopoverTrigger asChild>
+      {/* Action buttons */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Expand button for custom settings */}
+        {showExpandButton && isSelected && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
             onClick={(e) => {
               e.stopPropagation();
-              setInfoOpen(!infoOpen);
+              onToggleExpand?.();
             }}
           >
-            <Info className="h-4 w-4" />
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-72 p-3"
-          align="end"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${converterColors[converter.id]}`} />
-              <h4 className="font-semibold text-sm">{converter.name}</h4>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-2">Supported file formats:</p>
-              <div className="flex flex-wrap gap-1">
-                {fileFormats.map((format) => (
-                  <span
-                    key={format}
-                    className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono"
-                  >
-                    {format}
-                  </span>
-                ))}
+        )}
+
+        {/* Info button */}
+        {!isCustom && (
+          <Popover open={infoOpen} onOpenChange={setInfoOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInfoOpen(!infoOpen);
+                }}
+              >
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-72 p-3"
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${converterColors[converter.id]}`} />
+                  <h4 className="font-semibold text-sm">{converter.name}</h4>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Supported file formats:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {fileFormats.map((format) => (
+                      <span
+                        key={format}
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono"
+                      >
+                        {format}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
+            </PopoverContent>
+          </Popover>
+        )}
+
+        {/* Settings icon for custom */}
+        {isCustom && (
+          <Settings2 className="h-4 w-4 text-muted-foreground" />
+        )}
+      </div>
     </div>
   );
 }
 
 export function ConverterSelect() {
-  const { selectedConverter, setSelectedConverter } = useAppStore();
+  const {
+    selectedConverter,
+    setSelectedConverter,
+    fileConverterMapping,
+    customSettingsOpen,
+    setCustomSettingsOpen,
+  } = useAppStore();
 
   const { data: converters, isLoading, error } = useQuery({
     queryKey: ["converters"],
     queryFn: converterApi.getConverters,
   });
+
+  // Count custom mappings
+  const customCount = Object.values(fileConverterMapping).filter(
+    (v) => v && v !== "auto"
+  ).length;
 
   if (error) {
     return (
@@ -177,7 +239,7 @@ export function ConverterSelect() {
   return (
     <div className="space-y-3">
       <label className="text-sm font-medium">Conversion Library</label>
-      <ScrollArea className="h-[280px] pr-3">
+      <ScrollArea className="h-[320px] pr-3">
         <div className="space-y-2">
           {/* Auto Select Option */}
           <ConverterItem
@@ -189,6 +251,45 @@ export function ConverterSelect() {
             isSelected={selectedConverter === "auto"}
             onSelect={() => setSelectedConverter("auto")}
           />
+
+          {/* Custom Settings Option */}
+          <div>
+            <ConverterItem
+              converter={{
+                id: "custom",
+                name: "Custom Settings",
+                description: "Configure which converter to use for each file type",
+              }}
+              isSelected={selectedConverter === "custom"}
+              onSelect={() => {
+                setSelectedConverter("custom");
+                if (selectedConverter !== "custom") {
+                  setCustomSettingsOpen(true);
+                }
+              }}
+              showExpandButton={true}
+              isExpanded={customSettingsOpen}
+              onToggleExpand={() => setCustomSettingsOpen(!customSettingsOpen)}
+              customCount={customCount}
+            />
+
+            {/* Custom Settings Panel */}
+            <AnimatePresence>
+              {selectedConverter === "custom" && customSettingsOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 p-3 rounded-lg border-2 border-amber-500/30 bg-amber-500/5">
+                    <CustomConverterSettings />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Loading skeleton */}
           {isLoading && (
