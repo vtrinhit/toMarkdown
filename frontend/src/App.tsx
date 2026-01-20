@@ -214,12 +214,13 @@ function App() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            className="lg:min-h-[600px]"
           >
-            <Card className="h-full">
-              <CardHeader className="pb-3 sm:pb-6">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="pb-3 sm:pb-6 flex-shrink-0">
                 <CardTitle className="text-base sm:text-lg">Results</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 overflow-hidden">
                 <JobList />
               </CardContent>
             </Card>

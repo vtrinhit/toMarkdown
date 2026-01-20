@@ -238,7 +238,7 @@ export function JobList() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-3">
+      <div className="h-full flex flex-col space-y-3">
         {/* Header with bulk actions */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -389,7 +389,7 @@ export function JobList() {
         </div>
 
         {/* Job list */}
-        <ScrollArea className="h-[350px]">
+        <ScrollArea className="flex-1 min-h-0">
           <AnimatePresence mode="popLayout">
             {jobs.map((job) => (
               <motion.div
