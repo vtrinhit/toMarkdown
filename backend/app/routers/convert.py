@@ -40,7 +40,6 @@ async def list_converters():
             name=c["name"],
             description=c["description"],
             supported_extensions=c["supported_extensions"],
-            requires_api_key=c.get("requires_api_key", False),
         )
         for c in converters
     ]
@@ -86,10 +85,6 @@ async def start_conversion(
     """Start conversion for uploaded files."""
     from ..utils.file_manager import uploaded_files
 
-    # Get settings for API key
-    api_key = settings.openai_api_key
-    base_url = settings.openai_base_url
-
     # Validate file IDs
     file_infos = []
     for file_id in file_ids:
@@ -99,7 +94,7 @@ async def start_conversion(
         file_infos.append(file_info)
 
     # Create jobs
-    jobs = await process_multiple_jobs(file_infos, converter, api_key, base_url)
+    jobs = await process_multiple_jobs(file_infos, converter)
 
     return {"jobs": jobs, "count": len(jobs)}
 

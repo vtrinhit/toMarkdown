@@ -29,7 +29,6 @@ class PypandocConverter(BaseConverter):
         "json",
         "ipynb"
     ]
-    requires_api_key = False
 
     async def convert(self, file_path: Path, output_path: Path) -> str:
         """Convert file using pypandoc."""

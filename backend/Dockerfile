@@ -34,6 +34,8 @@ FROM python:3.11-slim AS runtime
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    # For healthcheck
+    curl \
     # Magic number detection
     libmagic1 \
     # PDF processing
@@ -72,7 +74,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Set working directory
 WORKDIR /app
 
-# Copy application code
+# Copy application code (bust cache with ARG)
+ARG CACHEBUST=1
 COPY app/ ./app/
 
 # Create directories for uploads and outputs

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Settings, Sparkles, Github, Loader2 } from "lucide-react";
+import { Sparkles, Github, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggleButton } from "@/components/ThemeToggle";
@@ -9,75 +9,27 @@ import { FileUpload } from "@/components/FileUpload";
 import { ConverterSelect } from "@/components/ConverterSelect";
 import { JobList } from "@/components/JobList";
 import { PreviewModal } from "@/components/PreviewModal";
-import { SettingsModal } from "@/components/SettingsModal";
 import { useAppStore } from "@/stores/app";
 import { converterApi } from "@/lib/api";
-import type { ConverterType, FileInfo } from "@/types";
 
 function App() {
   const {
     uploadedFiles,
     selectedConverter,
-    fileConverterMapping,
-    setSettingsOpen,
     clearUploadedFiles,
     addJobs,
   } = useAppStore();
   const [isConverting, setIsConverting] = useState(false);
   const queryClient = useQueryClient();
 
-  // Get converter for a file based on its extension
-  const getConverterForFile = (file: FileInfo): ConverterType => {
-    if (selectedConverter !== "custom") {
-      return selectedConverter as ConverterType;
-    }
-
-    // Get extension from file
-    const ext = file.extension?.toLowerCase() || "";
-    const configuredConverter = fileConverterMapping[ext];
-
-    // If configured and not auto, use the configured converter
-    if (configuredConverter && configuredConverter !== "auto") {
-      return configuredConverter as ConverterType;
-    }
-
-    // Default to auto
-    return "auto";
-  };
-
   const handleConvert = async () => {
     if (uploadedFiles.length === 0) return;
 
     setIsConverting(true);
     try {
-      if (selectedConverter === "custom") {
-        // Group files by their configured converter
-        const filesByConverter: Record<ConverterType, string[]> = {} as Record<ConverterType, string[]>;
-
-        uploadedFiles.forEach((file) => {
-          const converter = getConverterForFile(file);
-          if (!filesByConverter[converter]) {
-            filesByConverter[converter] = [];
-          }
-          filesByConverter[converter].push(file.id);
-        });
-
-        // Start conversion for each group
-        const allJobs = [];
-        for (const [converter, fileIds] of Object.entries(filesByConverter)) {
-          if (fileIds.length > 0) {
-            const result = await converterApi.startConversion(fileIds, converter as ConverterType);
-            allJobs.push(...result.jobs);
-          }
-        }
-
-        addJobs(allJobs);
-      } else {
-        // Normal conversion with single converter
-        const fileIds = uploadedFiles.map((f) => f.id);
-        const result = await converterApi.startConversion(fileIds, selectedConverter as ConverterType);
-        addJobs(result.jobs);
-      }
+      const fileIds = uploadedFiles.map((f) => f.id);
+      const result = await converterApi.startConversion(fileIds, selectedConverter);
+      addJobs(result.jobs);
 
       clearUploadedFiles();
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
@@ -112,15 +64,6 @@ function App() {
 
           <div className="flex items-center gap-1 sm:gap-2">
             <ThemeToggleButton />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSettingsOpen(true)}
-              title="Settings"
-              className="h-8 w-8 sm:h-9 sm:w-9"
-            >
-              <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
             <Button variant="ghost" size="icon" asChild className="h-8 w-8 sm:h-9 sm:w-9">
               <a
                 href="https://github.com/vtrinhit/toMD"
@@ -239,7 +182,7 @@ function App() {
             <div className="flex items-center gap-1.5 flex-wrap justify-center">
               <span className="hidden sm:inline">Converters:</span>
               <div className="flex flex-wrap gap-1 justify-center">
-                {["Markitdown", "Docling", "Marker", "Pypandoc", "Unstructured", "Mammoth", "html2text"].map((name) => (
+                {["Custom", "Markitdown", "Pypandoc"].map((name) => (
                   <span
                     key={name}
                     className="px-1.5 py-0.5 rounded bg-muted text-[10px] sm:text-xs"
@@ -255,7 +198,6 @@ function App() {
 
       {/* Modals */}
       <PreviewModal />
-      <SettingsModal />
     </div>
   );
 }

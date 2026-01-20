@@ -55,11 +55,15 @@ export function JobList() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch jobs periodically
+  // Fetch jobs periodically only when there are active jobs
+  const hasActiveJobs = jobs.some(
+    (j) => j.status === "pending" || j.status === "processing"
+  );
+
   const { data: fetchedJobs } = useQuery({
     queryKey: ["jobs"],
     queryFn: converterApi.getJobs,
-    refetchInterval: 1000,
+    refetchInterval: hasActiveJobs ? 2000 : false,
   });
 
   useEffect(() => {
@@ -221,10 +225,6 @@ export function JobList() {
       setIsDeleting(false);
     }
   };
-
-  const hasActiveJobs = jobs.some(
-    (j) => j.status === "pending" || j.status === "processing"
-  );
 
   if (jobs.length === 0) {
     return (

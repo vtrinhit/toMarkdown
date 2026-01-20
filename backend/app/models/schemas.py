@@ -9,12 +9,8 @@ from pydantic import BaseModel, Field
 class ConverterType(str, Enum):
     """Available converter types."""
     MARKITDOWN = "markitdown"
-    DOCLING = "docling"
-    MARKER = "marker"
     PYPANDOC = "pypandoc"
-    UNSTRUCTURED = "unstructured"
-    MAMMOTH = "mammoth"
-    HTML2TEXT = "html2text"
+    CUSTOM = "custom"
     AUTO = "auto"
 
 
@@ -61,25 +57,12 @@ class ConversionResponse(BaseModel):
     jobs: List[ConversionJob]
 
 
-class SettingsUpdate(BaseModel):
-    """Settings update request."""
-    openai_api_key: Optional[str] = None
-    openai_base_url: Optional[str] = None
-
-
-class SettingsResponse(BaseModel):
-    """Settings response."""
-    openai_api_key_set: bool
-    openai_base_url: Optional[str] = None
-
-
 class ConverterInfo(BaseModel):
     """Converter information."""
     id: ConverterType
     name: str
     description: str
     supported_extensions: List[str]
-    requires_api_key: bool = False
 
 
 class HealthResponse(BaseModel):

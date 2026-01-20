@@ -33,20 +33,12 @@ def _register_converter(name: str, module_name: str, class_name: str):
 
 
 # Register all converters - order matters for priority
+_register_converter("custom", "custom_converter", "CustomConverter")
 _register_converter("markitdown", "markitdown_converter", "MarkitdownConverter")
-_register_converter("docling", "docling_converter", "DoclingConverter")
-_register_converter("marker", "marker_converter", "MarkerConverter")
 _register_converter("pypandoc", "pypandoc_converter", "PypandocConverter")
-_register_converter("unstructured", "unstructured_converter", "UnstructuredConverter")
-_register_converter("mammoth", "mammoth_converter", "MammothConverter")
-_register_converter("html2text", "html2text_converter", "Html2textConverter")
 
 
-def get_converter(
-    converter_type: str,
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
-) -> BaseConverter:
+def get_converter(converter_type: str) -> BaseConverter:
     """Get converter instance by type."""
     if converter_type not in CONVERTERS:
         available = ", ".join(AVAILABLE_CONVERTERS)
@@ -55,40 +47,38 @@ def get_converter(
             f"Available converters: {available}"
         )
 
-    return CONVERTERS[converter_type](api_key=api_key, base_url=base_url)
+    return CONVERTERS[converter_type]()
 
 
-def get_best_converter_for_file(
-    file_path: Path,
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
-) -> BaseConverter:
+def get_best_converter_for_file(file_path: Path) -> BaseConverter:
     """
     Get the best converter for a given file based on extension.
 
     Priority order:
-    1. File-specific converters (marker for PDF, mammoth for DOCX)
-    2. Universal converters (markitdown, docling)
+    1. Custom converter for files with images (Excel, PDF, PowerPoint)
+    2. Universal converters (markitdown, pypandoc)
     """
     ext = file_path.suffix.lower().lstrip(".")
 
-    # Priority mapping
+    # Priority mapping - custom converter prioritized for files with images
     priority = {
-        "pdf": ["marker", "docling", "markitdown", "pypandoc", "unstructured"],
-        "docx": ["mammoth", "markitdown", "docling", "pypandoc", "unstructured"],
-        "doc": ["markitdown", "pypandoc", "unstructured"],
-        "pptx": ["docling", "markitdown", "unstructured"],
-        "ppt": ["markitdown", "unstructured"],
-        "xlsx": ["docling", "markitdown", "unstructured"],
-        "xls": ["markitdown", "unstructured"],
-        "html": ["html2text", "markitdown", "pypandoc", "unstructured"],
-        "htm": ["html2text", "markitdown", "pypandoc", "unstructured"],
-        "csv": ["markitdown", "unstructured"],
+        "pdf": ["custom", "markitdown", "pypandoc"],
+        "docx": ["markitdown", "pypandoc"],
+        "doc": ["markitdown", "pypandoc"],
+        "pptx": ["custom", "markitdown"],
+        "ppt": ["custom", "markitdown"],
+        "xlsx": ["custom", "markitdown"],
+        "xls": ["custom", "markitdown"],
+        "xlsm": ["custom", "markitdown"],
+        "xlsb": ["custom", "markitdown"],
+        "html": ["markitdown", "pypandoc"],
+        "htm": ["markitdown", "pypandoc"],
+        "csv": ["markitdown"],
         "json": ["markitdown", "pypandoc"],
-        "xml": ["markitdown", "html2text", "unstructured"],
+        "xml": ["markitdown"],
         "tex": ["pypandoc"],
         "latex": ["pypandoc"],
-        "rst": ["pypandoc", "unstructured"],
+        "rst": ["pypandoc"],
         "epub": ["pypandoc", "markitdown"],
         "ipynb": ["pypandoc"],
     }
@@ -96,7 +86,7 @@ def get_best_converter_for_file(
     # Image formats - markitdown with OCR
     image_exts = ["png", "jpg", "jpeg", "gif", "bmp", "webp", "tiff", "heic"]
     for img_ext in image_exts:
-        priority[img_ext] = ["markitdown", "docling", "unstructured"]
+        priority[img_ext] = ["markitdown"]
 
     # Audio formats - markitdown with transcription
     audio_exts = ["mp3", "wav", "m4a", "ogg", "flac"]
@@ -110,7 +100,7 @@ def get_best_converter_for_file(
         if converter_name not in CONVERTERS:
             continue
         try:
-            converter = get_converter(converter_name, api_key, base_url)
+            converter = get_converter(converter_name)
             if converter.supports_file(file_path):
                 return converter
         except Exception:
@@ -118,7 +108,7 @@ def get_best_converter_for_file(
 
     # Fallback to first available converter
     if AVAILABLE_CONVERTERS:
-        return get_converter(AVAILABLE_CONVERTERS[0], api_key, base_url)
+        return get_converter(AVAILABLE_CONVERTERS[0])
 
     raise ValueError("No converters available")
 

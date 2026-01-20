@@ -7,8 +7,6 @@ from .schemas import (
     ConversionJob,
     ConversionRequest,
     ConversionResponse,
-    SettingsUpdate,
-    SettingsResponse,
     ConverterInfo,
     HealthResponse,
 )
@@ -20,8 +18,6 @@ __all__ = [
     "ConversionJob",
     "ConversionRequest",
     "ConversionResponse",
-    "SettingsUpdate",
-    "SettingsResponse",
     "ConverterInfo",
     "HealthResponse",
 ]

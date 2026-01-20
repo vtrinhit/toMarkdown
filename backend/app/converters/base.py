@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 
 class BaseConverter(ABC):
@@ -11,12 +11,10 @@ class BaseConverter(ABC):
     name: str = "Base Converter"
     description: str = "Base converter interface"
     supported_extensions: List[str] = []
-    requires_api_key: bool = False
 
-    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
+    def __init__(self):
         """Initialize converter."""
-        self.api_key = api_key
-        self.base_url = base_url
+        pass
 
     @abstractmethod
     async def convert(self, file_path: Path, output_path: Path) -> str:
@@ -44,5 +42,4 @@ class BaseConverter(ABC):
             "name": cls.name,
             "description": cls.description,
             "supported_extensions": cls.supported_extensions,
-            "requires_api_key": cls.requires_api_key,
         }

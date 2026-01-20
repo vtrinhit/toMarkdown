@@ -23,8 +23,6 @@ executor = ThreadPoolExecutor(max_workers=settings.max_workers)
 async def create_job(
     file_info: dict,
     converter_type: ConverterType,
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
 ) -> ConversionJob:
     """Create a new conversion job."""
     job_id = str(uuid.uuid4())
@@ -41,7 +39,7 @@ async def create_job(
 
     # Start conversion in background
     asyncio.create_task(
-        process_job(job_id, file_info["path"], converter_type, api_key, base_url)
+        process_job(job_id, file_info["path"], converter_type)
     )
 
     return job
@@ -51,8 +49,6 @@ async def process_job(
     job_id: str,
     file_path: str,
     converter_type: ConverterType,
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
 ):
     """Process a conversion job."""
     job = jobs.get(job_id)
@@ -69,10 +65,17 @@ async def process_job(
 
         # Get converter
         if converter_type == ConverterType.AUTO:
-            converter = get_best_converter_for_file(input_path, api_key, base_url)
-            job.converter = ConverterType(converter.__class__.__name__.lower().replace("converter", ""))
+            converter = get_best_converter_for_file(input_path)
+            # Try to get converter name for display
+            converter_name = getattr(converter, 'name', '').lower().replace(' ', '_').replace('(', '').replace(')', '')
+            if 'custom' in converter_name:
+                job.converter = ConverterType.CUSTOM
+            elif 'markitdown' in converter_name:
+                job.converter = ConverterType.MARKITDOWN
+            elif 'pypandoc' in converter_name:
+                job.converter = ConverterType.PYPANDOC
         else:
-            converter = get_converter(converter_type.value, api_key, base_url)
+            converter = get_converter(converter_type.value)
 
         job.progress = 30
 
@@ -126,14 +129,12 @@ def delete_job(job_id: str) -> bool:
 async def process_multiple_jobs(
     file_infos: List[dict],
     converter_type: ConverterType,
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
 ) -> List[ConversionJob]:
     """Create and process multiple jobs concurrently."""
     created_jobs = []
 
     for file_info in file_infos:
-        job = await create_job(file_info, converter_type, api_key, base_url)
+        job = await create_job(file_info, converter_type)
         created_jobs.append(job)
 
     return created_jobs

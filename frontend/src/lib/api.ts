@@ -4,7 +4,6 @@ import type {
   ConverterInfo,
   ConverterType,
   FileInfo,
-  Settings,
 } from "@/types";
 
 const api = axios.create({
@@ -100,28 +99,6 @@ export const converterApi = {
   // Delete multiple jobs
   deleteMultiple: async (jobIds: string[]): Promise<void> => {
     await api.post("/convert/delete-multiple", { job_ids: jobIds });
-  },
-};
-
-export const settingsApi = {
-  // Get settings
-  getSettings: async (): Promise<Settings> => {
-    const { data } = await api.get("/settings");
-    return data;
-  },
-
-  // Update settings
-  updateSettings: async (settings: {
-    openai_api_key?: string;
-    openai_base_url?: string;
-  }): Promise<Settings> => {
-    const { data } = await api.put("/settings", settings);
-    return data;
-  },
-
-  // Clear API key
-  clearApiKey: async (): Promise<void> => {
-    await api.delete("/settings/api-key");
   },
 };
 

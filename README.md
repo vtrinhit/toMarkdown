@@ -10,7 +10,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-**Convert any file to Markdown with 7 powerful conversion engines**
+**Convert any file to Markdown with 3 powerful conversion engines**
 
 [Features](#features) • [Demo](#demo) • [Installation](#installation) • [Usage](#usage) • [API](#api-reference) • [Contributing](#contributing)
 
@@ -20,9 +20,9 @@
 
 ## Overview
 
-**toMD** is a modern, production-ready web application that converts various file formats to Markdown. It supports **7 different conversion libraries**, allowing you to choose the best engine for your specific needs.
+**toMD** is a modern, production-ready web application that converts various file formats to Markdown. It supports **3 different conversion libraries**, allowing you to choose the best engine for your specific needs.
 
-Whether you're converting PDFs with complex layouts, Word documents, Excel spreadsheets, images with OCR, or audio files with transcription - toMD has you covered.
+Whether you're converting PDFs with complex layouts, Word documents, Excel spreadsheets with embedded images, PowerPoint presentations, or audio files with transcription - toMD has you covered.
 
 ## Features
 
@@ -30,13 +30,9 @@ Whether you're converting PDFs with complex layouts, Word documents, Excel sprea
 
 | Library | Provider | Best For | Formats |
 |---------|----------|----------|---------|
+| **Custom (Enhanced)** | toMD | Files with embedded images/shapes | Excel (with images), PDF (with images), PowerPoint |
 | **Markitdown** | Microsoft | Universal conversion | PDF, Office, Images, Audio, HTML, CSV, JSON, XML |
-| **Docling** | IBM | Complex PDFs with tables | PDF, DOCX, PPTX, XLSX, HTML, Images |
-| **Marker** | VikParuchuri | PDF with OCR & LaTeX | PDF (with equation support) |
 | **Pypandoc** | Pandoc | Academic documents | 40+ formats including LaTeX, RST, MediaWiki |
-| **Unstructured** | Unstructured.io | AI-powered parsing | Documents, Images, Emails |
-| **Mammoth** | - | Semantic DOCX | DOCX (preserves structure) |
-| **HTML2Text** | - | Fast HTML conversion | HTML, XHTML, XML |
 
 ### UI/UX Features
 
@@ -51,7 +47,6 @@ Whether you're converting PDFs with complex layouts, Word documents, Excel sprea
 
 - **Async Processing** - Non-blocking file conversion
 - **Multi-threading** - Parallel processing for multiple files
-- **OpenAI Integration** - Enhanced OCR and audio transcription
 - **RESTful API** - Full API access for integration
 - **Container Ready** - Docker & Podman support
 
@@ -135,7 +130,7 @@ Whether you're converting PDFs with complex layouts, Word documents, Excel sprea
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/toMD.git
+git clone https://github.com/vtrinhit/toMD.git
 cd toMD
 
 # Start the application
@@ -236,8 +231,6 @@ curl http://localhost:8000/api/convert/download/<job-id> \
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key for enhanced OCR/transcription | - |
-| `OPENAI_BASE_URL` | Custom OpenAI-compatible endpoint | - |
 | `MAX_UPLOAD_SIZE` | Maximum file size (bytes) | `104857600` (100MB) |
 | `MAX_WORKERS` | Concurrent processing workers | `4` |
 | `DEBUG` | Enable debug mode | `false` |
@@ -265,8 +258,6 @@ cp .env.example .env
 | `DELETE` | `/api/convert/jobs/{id}` | Delete job |
 | `GET` | `/api/convert/download/{id}` | Download result |
 | `GET` | `/api/convert/preview/{id}` | Preview result |
-| `GET` | `/api/settings` | Get settings |
-| `PUT` | `/api/settings` | Update settings |
 
 ### Example Response
 
@@ -280,7 +271,7 @@ cp .env.example .env
     "mime_type": "application/pdf",
     "extension": "pdf"
   },
-  "converter": "marker",
+  "converter": "custom",
   "status": "completed",
   "progress": 100,
   "output_size": 24576,
@@ -301,12 +292,10 @@ cp .env.example .env
 │  FastAPI + Uvicorn + Async Processing                       │
 ├─────────────────────────────────────────────────────────────┤
 │                     Converters                               │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│  │Markitdown│ │ Docling  │ │  Marker  │ │ Pypandoc │       │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐                    │
-│  │Unstructu.│ │ Mammoth  │ │HTML2Text │                    │
-│  └──────────┘ └──────────┘ └──────────┘                    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐                      │
+│  │  Custom  │ │Markitdown│ │ Pypandoc │                      │
+│  │(Enhanced)│ │          │ │          │                      │
+│  └──────────┘ └──────────┘ └──────────┘                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -316,7 +305,7 @@ cp .env.example .env
 |-------|--------------|
 | **Frontend** | React 18, TypeScript, Vite, TailwindCSS, Shadcn/UI, Zustand, React Query, Framer Motion |
 | **Backend** | Python 3.11, FastAPI, Uvicorn, Pydantic, aiofiles |
-| **Converters** | markitdown, docling, marker-pdf, pypandoc, unstructured, mammoth, html2text |
+| **Converters** | Custom (PyMuPDF, openpyxl, python-pptx), markitdown, pypandoc |
 | **Infrastructure** | Docker, Podman, Nginx |
 
 ## Contributing
@@ -336,19 +325,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - [Microsoft Markitdown](https://github.com/microsoft/markitdown)
-- [IBM Docling](https://github.com/DS4SD/docling)
-- [Marker](https://github.com/VikParuchuri/marker)
 - [Pandoc](https://pandoc.org/)
-- [Unstructured](https://github.com/Unstructured-IO/unstructured)
-- [Mammoth](https://github.com/mwilliamson/python-mammoth)
-- [html2text](https://github.com/Alir3z4/html2text)
+- [PyMuPDF](https://pymupdf.readthedocs.io/)
 
 ---
 
 <div align="center">
 
-**[Back to Top](#tomd)**
+**[Back to Top](#universal-file-to-markdown-converter)**
 
-Made with ❤️ by the toMD Team
+Made with love by the toMD Team
 
 </div>

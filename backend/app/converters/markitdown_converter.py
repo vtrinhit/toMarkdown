@@ -2,7 +2,7 @@
 
 import asyncio
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from .base import BaseConverter
 
@@ -24,7 +24,6 @@ class MarkitdownConverter(BaseConverter):
         "mp3", "wav", "m4a", "ogg", "flac",
         "zip", "epub", "txt", "md", "rst", "rtf"
     ]
-    requires_api_key = False  # Optional for enhanced features
 
     async def convert(self, file_path: Path, output_path: Path) -> str:
         """Convert file using markitdown."""
@@ -32,21 +31,7 @@ class MarkitdownConverter(BaseConverter):
         def _convert():
             from markitdown import MarkItDown
 
-            # Initialize with optional LLM for enhanced features
-            if self.api_key:
-                try:
-                    from openai import OpenAI
-
-                    client = OpenAI(
-                        api_key=self.api_key,
-                        base_url=self.base_url if self.base_url else None,
-                    )
-                    md = MarkItDown(llm_client=client, llm_model="gpt-4o-mini")
-                except Exception:
-                    md = MarkItDown()
-            else:
-                md = MarkItDown()
-
+            md = MarkItDown()
             result = md.convert(str(file_path))
             markdown_content = result.text_content
 

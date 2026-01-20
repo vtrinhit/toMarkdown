@@ -22,12 +22,8 @@ export interface ConversionJob {
 
 export type ConverterType =
   | "markitdown"
-  | "docling"
-  | "marker"
   | "pypandoc"
-  | "unstructured"
-  | "mammoth"
-  | "html2text"
+  | "custom"
   | "auto";
 
 export type ConversionStatus =
@@ -41,12 +37,6 @@ export interface ConverterInfo {
   name: string;
   description: string;
   supported_extensions: string[];
-  requires_api_key: boolean;
-}
-
-export interface Settings {
-  openai_api_key_set: boolean;
-  openai_base_url: string | null;
 }
 
 export interface UploadedFile extends File {

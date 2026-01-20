@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from .config import settings
-from .routers import convert_router, settings_router
+from .routers import convert_router
 from .models import HealthResponse
 
 
@@ -43,7 +43,6 @@ app.add_middleware(
 
 # Include routers
 app.include_router(convert_router)
-app.include_router(settings_router)
 
 
 @app.get("/api/health", response_model=HealthResponse)
@@ -64,7 +63,6 @@ async def api_info():
             "upload": "/api/convert/upload",
             "start": "/api/convert/start",
             "jobs": "/api/convert/jobs",
-            "settings": "/api/settings",
         },
     }
 
