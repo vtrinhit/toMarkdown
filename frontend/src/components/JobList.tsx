@@ -11,7 +11,6 @@ import {
   Clock,
   FileText,
   CheckSquare,
-  Square,
   PackageOpen,
   X,
 } from "lucide-react";
@@ -24,6 +23,12 @@ import { useAppStore } from "@/stores/app";
 import { converterApi } from "@/lib/api";
 import { formatBytes, formatDuration } from "@/lib/utils";
 import type { ConversionJob, ConversionStatus } from "@/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const converterColors: Record<string, string> = {
   markitdown: "bg-blue-500",
@@ -37,10 +42,10 @@ const converterColors: Record<string, string> = {
 };
 
 const statusIcons: Record<ConversionStatus, React.ReactNode> = {
-  pending: <Clock className="h-5 w-5 text-muted-foreground" />,
-  processing: <Loader2 className="h-5 w-5 text-primary animate-spin" />,
-  completed: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-  failed: <XCircle className="h-5 w-5 text-destructive" />,
+  pending: <Clock className="h-5 w-5 text-muted-foreground flex-shrink-0" />,
+  processing: <Loader2 className="h-5 w-5 text-primary animate-spin flex-shrink-0" />,
+  completed: <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />,
+  failed: <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />,
 };
 
 export function JobList() {
@@ -79,6 +84,16 @@ export function JobList() {
   const selectedJobs = jobs.filter((j) => selectedIds.has(j.id));
   const selectedCompletedJobs = selectedJobs.filter((j) => j.status === "completed");
 
+  const allSelected = jobs.length > 0 && selectedIds.size === jobs.length;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(jobs.map((j) => j.id)));
+    }
+  };
+
   const toggleSelect = (jobId: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -89,14 +104,6 @@ export function JobList() {
       }
       return next;
     });
-  };
-
-  const selectAll = () => {
-    setSelectedIds(new Set(jobs.map((j) => j.id)));
-  };
-
-  const selectNone = () => {
-    setSelectedIds(new Set());
   };
 
   const handleDownload = async (job: ConversionJob) => {
@@ -230,186 +237,215 @@ export function JobList() {
   }
 
   return (
-    <div className="space-y-3">
-      {/* Header with bulk actions */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Conversion Results</h3>
-          {hasActiveJobs && (
-            <span className="text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Processing...
-            </span>
-          )}
-        </div>
-
-        {/* Bulk Actions Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-muted/50 border">
-          {/* Selection controls */}
-          <div className="flex items-center gap-1 mr-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={selectAll}
-              className="h-8 px-2"
-              title="Select all"
-            >
-              <CheckSquare className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={selectNone}
-              className="h-8 px-2"
-              title="Deselect all"
-            >
-              <Square className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="h-6 w-px bg-border" />
-
-          {/* Selection info */}
-          <span className="text-sm text-muted-foreground min-w-[100px]">
-            {selectedIds.size > 0 ? (
-              <span className="text-foreground font-medium">
-                {selectedIds.size} selected
+    <TooltipProvider>
+      <div className="space-y-3">
+        {/* Header with bulk actions */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Conversion Results</h3>
+            {hasActiveJobs && (
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
               </span>
-            ) : (
-              `${jobs.length} items`
-            )}
-          </span>
-
-          <div className="flex-1" />
-
-          {/* Bulk action buttons */}
-          <div className="flex items-center gap-2">
-            {/* Download selected */}
-            {selectedCompletedJobs.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadSelected}
-                disabled={isDownloading}
-                className="h-8 gap-1.5"
-              >
-                {isDownloading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-                Download ({selectedCompletedJobs.length})
-              </Button>
-            )}
-
-            {/* Download all completed */}
-            {completedJobs.length > 0 && selectedIds.size === 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadAll}
-                disabled={isDownloading}
-                className="h-8 gap-1.5"
-              >
-                {isDownloading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <PackageOpen className="h-4 w-4" />
-                )}
-                Download All ({completedJobs.length})
-              </Button>
-            )}
-
-            {/* Delete selected */}
-            {selectedIds.size > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeleteSelected}
-                disabled={isDeleting}
-                className="h-8 gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                {isDeleting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                Delete ({selectedIds.size})
-              </Button>
-            )}
-
-            {/* Clear all */}
-            {selectedIds.size === 0 && jobs.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDeleteAll}
-                disabled={isDeleting}
-                className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
-                title="Clear all"
-              >
-                {isDeleting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <X className="h-4 w-4" />
-                )}
-                Clear All
-              </Button>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Job list */}
-      <ScrollArea className="h-[350px]">
-        <AnimatePresence mode="popLayout">
-          {jobs.map((job) => (
-            <motion.div
-              key={job.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              layout
-            >
-              <Card
-                className={`p-4 mb-3 transition-colors ${
-                  selectedIds.has(job.id)
-                    ? "ring-2 ring-primary bg-primary/5"
-                    : ""
-                }`}
+          {/* Bulk Actions Toolbar */}
+          <div className="flex flex-wrap items-center gap-2 p-2 sm:p-3 rounded-lg bg-muted/50 border">
+            {/* Single toggle for select all/none */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleSelectAll}
+                  className="h-8 px-2 gap-1.5"
+                >
+                  <CheckSquare className={`h-4 w-4 ${allSelected ? "text-primary" : ""}`} />
+                  <span className="hidden sm:inline text-xs">
+                    {allSelected ? "Deselect" : "Select All"}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {allSelected ? "Deselect all" : "Select all"}
+              </TooltipContent>
+            </Tooltip>
+
+            <div className="h-6 w-px bg-border hidden sm:block" />
+
+            {/* Selection info */}
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {selectedIds.size > 0 ? (
+                <span className="text-foreground font-medium">
+                  {selectedIds.size} selected
+                </span>
+              ) : (
+                `${jobs.length} items`
+              )}
+            </span>
+
+            <div className="flex-1" />
+
+            {/* Bulk action buttons */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Download selected */}
+              {selectedCompletedJobs.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadSelected}
+                      disabled={isDownloading}
+                      className="h-8 gap-1.5 px-2 sm:px-3"
+                    >
+                      {isDownloading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      <span className="hidden sm:inline">Download</span>
+                      <span className="text-xs">({selectedCompletedJobs.length})</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Download selected files</TooltipContent>
+                </Tooltip>
+              )}
+
+              {/* Download all completed */}
+              {completedJobs.length > 0 && selectedIds.size === 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadAll}
+                      disabled={isDownloading}
+                      className="h-8 gap-1.5 px-2 sm:px-3"
+                    >
+                      {isDownloading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <PackageOpen className="h-4 w-4" />
+                      )}
+                      <span className="hidden sm:inline">All</span>
+                      <span className="text-xs">({completedJobs.length})</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Download all completed files</TooltipContent>
+                </Tooltip>
+              )}
+
+              {/* Delete selected */}
+              {selectedIds.size > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeleteSelected}
+                      disabled={isDeleting}
+                      className="h-8 gap-1.5 px-2 sm:px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                      <span className="hidden sm:inline">Delete</span>
+                      <span className="text-xs">({selectedIds.size})</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete selected items</TooltipContent>
+                </Tooltip>
+              )}
+
+              {/* Clear all */}
+              {selectedIds.size === 0 && jobs.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleDeleteAll}
+                      disabled={isDeleting}
+                      className="h-8 gap-1.5 px-2 sm:px-3 text-muted-foreground hover:text-destructive"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                      <span className="hidden sm:inline">Clear</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clear all items</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Job list */}
+        <ScrollArea className="h-[350px]">
+          <AnimatePresence mode="popLayout">
+            {jobs.map((job) => (
+              <motion.div
+                key={job.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                layout
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                <Card
+                  className={`p-3 sm:p-4 mb-3 transition-colors ${
+                    selectedIds.has(job.id)
+                      ? "ring-2 ring-primary bg-primary/5"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-2 sm:gap-3">
                     {/* Checkbox */}
                     <Checkbox
                       checked={selectedIds.has(job.id)}
                       onCheckedChange={() => toggleSelect(job.id)}
-                      className="mt-0.5"
+                      className="mt-0.5 flex-shrink-0"
                     />
 
                     {/* Status icon */}
                     {statusIcons[job.status]}
 
                     {/* File info */}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{job.file_info.name}</p>
-                      <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="font-medium truncate cursor-default">
+                            {job.file_info.name}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <p className="break-all">{job.file_info.name}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1 text-xs text-muted-foreground">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-white ${
+                          className={`px-1.5 sm:px-2 py-0.5 rounded-full text-white text-[10px] sm:text-xs ${
                             converterColors[job.converter] || "bg-gray-500"
                           }`}
                         >
                           {job.converter}
                         </span>
-                        <span>{formatBytes(job.file_info.size)}</span>
+                        <span className="hidden xs:inline">{formatBytes(job.file_info.size)}</span>
                         {job.output_size && (
                           <>
-                            <span>→</span>
-                            <span>{formatBytes(job.output_size)}</span>
+                            <span className="hidden sm:inline">→</span>
+                            <span className="hidden sm:inline">{formatBytes(job.output_size)}</span>
                           </>
                         )}
                         {job.processing_time && (
-                          <span>{formatDuration(job.processing_time)}</span>
+                          <span className="hidden md:inline">{formatDuration(job.processing_time)}</span>
                         )}
                       </div>
 
@@ -420,53 +456,72 @@ export function JobList() {
 
                       {/* Error message */}
                       {job.status === "failed" && job.error && (
-                        <p className="text-destructive text-sm mt-2 line-clamp-2">
-                          {job.error}
-                        </p>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-destructive text-xs mt-2 line-clamp-1 cursor-default">
+                              {job.error}
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-sm">
+                            <p className="break-all">{job.error}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
-                  </div>
 
-                  {/* Individual actions */}
-                  <div className="flex items-center gap-1">
-                    {job.status === "completed" && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => setPreviewJobId(job.id)}
-                          title="Preview"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleDownload(job)}
-                          title="Download"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDelete(job.id)}
-                      title="Delete"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {/* Individual actions */}
+                    <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                      {job.status === "completed" && (
+                        <>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 sm:h-8 sm:w-8"
+                                onClick={() => setPreviewJobId(job.id)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Preview</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 sm:h-8 sm:w-8"
+                                onClick={() => handleDownload(job)}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Download</TooltipContent>
+                          </Tooltip>
+                        </>
+                      )}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDelete(job.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </ScrollArea>
-    </div>
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </ScrollArea>
+      </div>
+    </TooltipProvider>
   );
 }

@@ -54,26 +54,28 @@ export function PreviewModal() {
 
   return (
     <Dialog open={!!previewJobId} onOpenChange={() => setPreviewJobId(null)}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between pr-8">
-            <span>Preview: {job?.file_info.name}</span>
-            <div className="flex items-center gap-2">
+      <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh] flex flex-col p-4 sm:p-6">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pr-8">
+            <span className="truncate text-base sm:text-lg" title={job?.file_info.name}>
+              Preview: {job?.file_info.name}
+            </span>
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleCopy}
-                className="gap-2"
+                className="gap-2 h-8"
               >
                 {copied ? (
                   <>
                     <Check className="h-4 w-4" />
-                    Copied
+                    <span className="hidden sm:inline">Copied</span>
                   </>
                 ) : (
                   <>
                     <Copy className="h-4 w-4" />
-                    Copy
+                    <span className="hidden sm:inline">Copy</span>
                   </>
                 )}
               </Button>
@@ -81,10 +83,10 @@ export function PreviewModal() {
                 variant="outline"
                 size="sm"
                 onClick={handleDownload}
-                className="gap-2"
+                className="gap-2 h-8"
               >
                 <Download className="h-4 w-4" />
-                Download
+                <span className="hidden sm:inline">Download</span>
               </Button>
             </div>
           </DialogTitle>
@@ -97,13 +99,13 @@ export function PreviewModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 rounded-lg border bg-muted/30 p-4">
+        <ScrollArea className="flex-1 rounded-lg border bg-muted/30 p-4 mt-4">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full min-h-[200px]">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="prose dark:prose-invert max-w-none">
+            <div className="prose dark:prose-invert max-w-none prose-sm sm:prose-base">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {preview?.content || ""}
               </ReactMarkdown>
