@@ -59,6 +59,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     # PDF rendering
     ghostscript \
+    # LibreOffice for Excel/Word chart/shape rendering
+    libreoffice-calc \
+    libreoffice-writer \
+    libreoffice-impress \
+    libreoffice-common \
     # Additional libs
     libgomp1 \
     libxml2 \

@@ -68,9 +68,17 @@ export function JobList() {
 
   useEffect(() => {
     if (fetchedJobs) {
-      setJobs(fetchedJobs);
+      // Only update if we have jobs, or if there are no active jobs in current state
+      // This prevents clearing the list during long processing operations
+      const currentHasActiveJobs = jobs.some(
+        (j) => j.status === "pending" || j.status === "processing"
+      );
+
+      if (fetchedJobs.length > 0 || !currentHasActiveJobs) {
+        setJobs(fetchedJobs);
+      }
     }
-  }, [fetchedJobs, setJobs]);
+  }, [fetchedJobs, setJobs, jobs]);
 
   // Clean up selected IDs when jobs change
   useEffect(() => {

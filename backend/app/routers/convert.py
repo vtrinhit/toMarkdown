@@ -83,8 +83,6 @@ async def start_conversion(
     converter: ConverterType = Form(ConverterType.AUTO),
 ):
     """Start conversion for uploaded files."""
-    from ..utils.file_manager import uploaded_files
-
     # Validate file IDs
     file_infos = []
     for file_id in file_ids:
@@ -159,9 +157,10 @@ async def preview_result(job_id: str):
 
     content = output_path.read_text(encoding="utf-8")
 
-    # Limit preview to first 10000 characters
-    preview = content[:10000]
-    truncated = len(content) > 10000
+    # Limit preview to first 500KB (increased for base64 images)
+    max_preview_size = 500 * 1024
+    preview = content[:max_preview_size]
+    truncated = len(content) > max_preview_size
 
     return {
         "content": preview,
